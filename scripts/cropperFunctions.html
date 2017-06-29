@@ -1,0 +1,470 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Crop.html</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script src="tracking-min.js"></script>
+    <script src="face-min.js"></script>
+    <script src="cropper.js"></script>
+    <script src="jquery.ae.image.resize.js"></script>
+    <script src="main.js"></script>
+    <link href="main.css" rel="stylesheet" />
+    <link href="cropper.css" rel="stylesheet" />
+    <style>
+
+        .container {
+           max-width: 600px;
+           margin: 20px auto;
+            height:auto;
+        }
+
+        img {
+          max-width:100%;
+         
+          
+        }
+
+        .cropper-view-box
+         {
+            border-radius: 0%;
+        }
+        #result{
+           
+        }
+       
+    </style>
+</head>
+<body>
+    <div class="container">
+     
+        <h1>Cropper.js with tracking.js</h1>
+        <h3>Image processing</h3>
+        <button type="button" id="button" disabled>Click</button>
+        <button type="button" id="button1" disabled>rotate right</button>
+        <button type="button" id="button2" disabled>Rotate Left</button>
+        <button type="button" id="originalImage" disabled>Show Original Image</button>
+        <button type="button" id="cropped" disabled>Cropped Images</button>
+     
+            <div>
+                <input type="file" onchange="previewFile()"><br>
+                <img id="img" src="" alt="Image preview..." onload="imageload()">
+            </div>
+        <div id="originalImage" style="display:none">
+            <img id="original_img" src="" />
+        </div>
+     </div>
+   
+    
+  
+    <div id="result">
+    </div>
+
+    
+    <script>
+        
+        function previewFile() {
+           
+            cropperInstance && cropperInstance.destroy();
+            var preview = document.querySelector('img'); //selects the query named img
+            var original_preview = document.getElementById('original_img');
+            var file = document.querySelector('input[type=file]').files[0]; //sames as here
+            var reader = new FileReader();
+
+            reader.onloadend = function () {
+                original_preview.src = reader.result;
+                preview.src = reader.result;
+               
+            }
+
+            if (file) {
+                reader.readAsDataURL(file); //reads the data as a URL
+
+            }
+            else {
+                preview.src = "";
+            }
+       
+            
+        };
+       
+
+        function imageload() {
+            plots();
+        }
+        var cropperInstance;
+        function plots() {
+            button.disabled = false;
+            button1.disabled = false;
+            button2.disabled = false;
+            originalImage.disabled = false;
+      
+            var img = document.getElementById('img');
+            
+            var tracker = new tracking.ObjectTracker('face');
+            
+            tracking.track(img, tracker);
+
+            tracker.on('track', function (event) {
+                event.data.forEach(function (rect) {
+                    plotRectangle(rect.x, rect.y, rect.width, rect.height, img);
+                });
+            });
+            var plotRectangle = function (x, y, w, h) {
+
+                //   var rect = document.createElement('div');
+                // document.querySelector('.container').appendChild(rect);
+                //rect.classList.add('rect');
+                //rect.style.width = w + 'px';
+                //rect.style.height = h + 'px';
+                //rect.style.left = (img.offsetLeft + x) + 'px';
+                //rect.style.top = (img.offsetTop + y) + 'px';
+
+                var data_obj = { left: x, top: y, width: w, height: h };
+                f(data_obj);
+
+            }
+        }
+        function f(data) {
+
+            //var image = document.getElementById('img');
+            //var cropper = new Cropper(image, {
+            //    aspectRatio: 3 / 4,
+
+            //    setData:function(data){
+
+            //}
+            //});
+            ////cropper.initCanvas();
+
+            //cropper.setData(data);
+
+            var image = document.getElementById('img')
+            var originalImage = image.src;
+        
+            //    var cropper = new Cropper(image, {
+            //        cropBoxMovable: true,
+            //        ready: function () {
+
+            //            var cropper = this.cropper;
+            //            var containerData = cropper.getContainerData();
+            //            var cropBoxData = cropper.getCropBoxData();
+            //            var aspectRatio = 3/4;
+            //            cropper.setCropBoxData(data);
+            //            },
+            //    });
+
+            //}
+
+            var cropper = new Cropper(image, {
+
+                cropBoxMovable: true,
+                cropBoxResizable: true,
+                ready: function () {
+
+                    var cropper = this.cropper;
+                    var containerData = cropper.getContainerData();
+                    var cropBoxData = cropper.getCropBoxData();
+                    var aspectRatio = 3 / 4;
+                    var newCropBoxWidth;
+                    croppable = true;
+
+                    cropper.setCropBoxData(data);
+
+                },
+                cropmove: function () {
+                    var cropper = this.cropper;
+
+                    var cropBoxData = cropper.getCropBoxData();
+                    var aspectRatio = 3 / 4;
+                    cropper.setCropBoxData({
+                        width: cropBoxData.height * aspectRatio
+                    });
+
+                }
+             
+            });
+
+            cropperInstance = cropper;
+            var button = document.getElementById('button');
+            var result = document.getElementById('result');
+            var croppable = false;
+            // array of images
+          
+            // output
+      
+            button.onclick = function () {
+                var croppedCanvas;
+                var roundedCanvas;
+                var roundedImage;
+                if (!croppable) {
+                    return;
+                }
+
+              
+             
+            // push two images to the array
+       
+                // Crop
+                croppedCanvas = cropper.getCroppedCanvas();
+                var cropBoxData = cropper.getCropBoxData();
+                // Show
+                roundedImage = document.createElement('img');
+                roundedImage.setAttribute("height", cropBoxData.height);
+                roundedImage.setAttribute("width", cropBoxData.width);
+                roundedImage.src = croppedCanvas.toDataURL()
+                result.innerHTML = '';
+                result.appendChild(roundedImage);
+            };
+
+
+            button1.onclick = function () {
+                cropper.rotate(90);
+            }
+            button2.onclick = function () {
+                cropper.rotate(-90);
+            }
+            cropped.onclick = function () {
+                $("#imagecontainer").each()
+            }
+
+            //originalImage.onclick = function()
+            //{
+            //    oImage = document.createElement('img');
+            //    oImage.setAttribute("height", 500);
+            //    oImage.setAttribute("width", 400);
+            //    oImage.src = originalImage;
+            //    result.appendChild(oImage);
+            
+            //}
+           onmouseenter = function()
+            {
+                cropper.zoom(.1);
+           }
+           onmouseleave = function () {
+               cropper.zoom(-.1);
+           }
+
+        }
+
+        //OriginalImage = document.createElement('img');
+        //OriginalImage.setAttribute("height", 500);
+        //OriginalImage.setAttribute("width", 400);
+        //OriginalImage.src = originalImage;
+        //result.appendChild(OriginalImage);
+       
+    //function imageload() {
+    //    plots();
+       
+    //}
+    //function plots() {
+    //    var img = document.getElementById('img');
+    //    var tracker = new tracking.ObjectTracker('face');
+    //    tracking.track(img, tracker);
+
+    //    tracker.on('track', function (event) {
+    //        event.data.forEach(function (rect) {
+    //            plotRectangle(rect.x, rect.y, rect.width, rect.height);
+    //        });
+    //    });
+    //    var plotRectangle = function (x, y, w, h) {
+
+    //        var rect = document.createElement('div');
+    //        document.querySelector('.container').appendChild(rect);
+    //        //rect.classList.add('rect');
+    //        //rect.style.width = w + 'px';
+    //        //rect.style.height = h + 'px';
+    //        //rect.style.left = (img.offsetLeft + x) + 'px';
+    //        //rect.style.top = (img.offsetTop + y) + 'px';
+         
+    //        var data_obj = { left: x, top: y, width: w, height: h };
+    //        f(data_obj);
+         
+    //    }
+    //}
+    //function f(data) {
+    //    //var image = document.getElementById('img');
+    //    //var cropper = new Cropper(image, {
+    //    //    aspectRatio: 3 / 4,
+
+    //    //    setData:function(data){
+
+    //    //}
+    //    //});
+    //    ////cropper.initCanvas();
+
+    //    //cropper.setData(data);
+
+    //    var image = document.getElementById('img')
+    //    //    var cropper = new Cropper(image, {
+    //    //        cropBoxMovable: true,
+    //    //        ready: function () {
+
+    //    //            var cropper = this.cropper;
+    //    //            var containerData = cropper.getContainerData();
+    //    //            var cropBoxData = cropper.getCropBoxData();
+    //    //            var aspectRatio = 3/4; 
+    //    //            cropper.setCropBoxData(data);
+    //    //            },
+    //    //    });
+
+    //    //}
+       
+    //    var cropper = new Cropper(image, {
+
+    //        cropBoxMovable: true,
+    //        cropBoxResizable: true,
+    //        ready: function () {
+    //            var cropper = this.cropper;
+    //            var containerData = cropper.getContainerData();
+    //            var cropBoxData = cropper.getCropBoxData();
+    //            var aspectRatio = 3/4;
+    //            var newCropBoxWidth;
+    //            croppable = true;
+             
+    //            cropper.setCropBoxData(data);
+
+    //        },
+    //        cropmove: function () {
+    //            var cropper = this.cropper;
+              
+    //            var cropBoxData = cropper.getCropBoxData();
+    //            var aspectRatio = 3/4;
+    //            cropper.setCropBoxData({
+    //                width: cropBoxData.height * aspectRatio
+    //            });
+               
+    //        }
+         
+
+    //    });
+    //    var button = document.getElementById('button');
+    //    var result = document.getElementById('result');
+    //    var croppable = false;
+
+    //    button.onclick = function () {
+    //        var croppedCanvas;
+    //        var roundedCanvas;
+    //        var roundedImage;
+
+    //        if (!croppable) {
+    //            return;
+    //        }
+
+    //        // Crop
+    //        croppedCanvas = cropper.getCroppedCanvas();
+
+
+    //        var cropBoxData = cropper.getCropBoxData();
+    //        // Show
+    //        roundedImage = document.createElement('img');
+    //        roundedImage.setAttribute("height", cropBoxData.height);
+    //        roundedImage.setAttribute("width", cropBoxData.width);
+    //        roundedImage.src = croppedCanvas.toDataURL()
+    //        result.innerHTML = '';
+    //        result.appendChild(roundedImage);
+    //    };
+
+    //    button1.click = function () {
+    //        cropper.rotate(90);
+    //    };
+    //    button2.click = function () {
+    //        cropper.rotate(-90);
+    //    };
+        
+    //}
+
+   //function croppd () {
+   //        var image = document.getElementById('img');
+   //        var button = document.getElementById('button');
+   //        var result = document.getElementById('result');
+   //        var croppable = false;
+      
+   //        var cropper = new Cropper(image, {
+   //            aspectRatio:3/4,
+   //            ready: function () {
+   //                croppable = true;
+   //            }
+   //        });
+
+   //                    var croppedCanvas;
+   //                    var roundedCanvas;
+   //                    var roundedImage;
+
+   //                    if (!croppable) {
+   //                        return;
+   //                    }
+
+   //                    // Crop
+   //                    croppedCanvas = cropper.getCroppedCanvas();
+   //                    // Show
+   //                    roundedImage = document.createElement('img');
+   //                    roundedImage.src = croppedCanvas.toDataURL()
+   //                    result.innerHTML = '';
+   //                    result.appendChild(roundedImage);
+    
+        //}
+    //(function croppd() {
+      
+    //        var image = document.getElementById('img');
+    //        var button = document.getElementById('button');
+    //        var result = document.getElementById('result');
+    //        var croppable = false;
+         
+    //        button.onclick = function () {
+    //            var croppedCanvas;
+    //            var roundedCanvas;
+    //            var roundedImage;
+
+    //            if (!croppable) {
+    //                return;
+    //            }
+
+    //            // Crop
+    //            croppedCanvas = cropper.getCroppedCanvas();
+
+
+
+    //            // Show
+    //            roundedImage = document.createElement('img');
+    //            roundedImage.setAttribute("height", "200");
+    //            roundedImage.setAttribute("width", "200");
+    //            roundedImage.src = croppedCanvas.toDataURL()
+    //            result.innerHTML = '';
+    //            result.appendChild(roundedImage);
+    //        };
+
+    //    })();
+
+        //$(document).ready(function () {
+        //    $('#img').each(function () {
+        //        var maxWidth = 600; // Max width for the image
+        //        var maxHeight = 525;    // Max height for the image
+        //        var ratio = .75;  // Used for aspect ratio
+        //        var width = $(this).width();    // Current image width
+        //        var height = $(this).height();  // Current image height
+
+        //        // Check if the current width is larger than the max
+        //        if (width > maxWidth) {
+        //            ratio = maxWidth / width;   // get ratio for scaling image
+        //            $(this).css("width", maxWidth); // Set new width
+        //            $(this).css("height", height * ratio);  // Scale height based on ratio
+        //            height = height * ratio;    // Reset height to match scaled image
+        //            width = width * ratio;    // Reset width to match scaled image
+        //        }
+
+        //        // Check if current height is larger than max
+        //        if (height > maxHeight) {
+        //            ratio = maxHeight / height; // get ratio for scaling image
+        //            $(this).css("height", maxHeight);   // Set new height
+        //            $(this).css("width", width * ratio);    // Scale width based on ratio
+        //            width = width * ratio;    // Reset width to match scaled image
+        //            height = height * ratio;    // Reset height to match scaled image
+        //        }
+        //    });
+        //});
+    </script>
+</body>
+</html>
